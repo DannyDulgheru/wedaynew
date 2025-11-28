@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET /api/events - List all events (filtered by user role)
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session || !session.user) {
       return NextResponse.json(
@@ -78,7 +77,7 @@ export async function GET(req: Request) {
 // POST /api/events - Create new event
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session || !session.user) {
       return NextResponse.json(
