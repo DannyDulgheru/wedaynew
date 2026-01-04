@@ -21,9 +21,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // Get CSRF token first
+      const csrfResponse = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfResponse.json();
+
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
+        csrfToken,
         redirect: false,
       });
 
@@ -40,8 +45,10 @@ export default function LoginPage() {
         
         if (session?.user?.role === "ADMIN") {
           router.push("/admin/dashboard");
+          router.refresh();
         } else {
           router.push("/client/dashboard");
+          router.refresh();
         }
       }
     } catch (err) {
