@@ -6,43 +6,18 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-enum UserRole {
-  ADMIN
-  CLIENT
-}
-
-enum EventType {
-  WEDDING
-  BAPTISM
-  BIRTHDAY
-  ANNIVERSARY
-  CORPORATE
-}
-
-enum OrderStatus {
-  PENDING
-  PAID
-  ACTIVE
-  EXPIRED
-}
-
-enum RSVPStatus {
-  ATTENDING
-  NOT_ATTENDING
-  MAYBE
-}
-
+// SQLite doesn't support enums, using String with default values
 model User {
   id            String    @id @default(uuid())
   name          String?
   email         String    @unique
   emailVerified DateTime?
   password      String
-  role          UserRole  @default(CLIENT)
+  role          String    @default("CLIENT")  // ADMIN | CLIENT
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -91,14 +66,14 @@ model Template {
   id          String    @id @default(uuid())
   name        String
   description String?
-  eventType   EventType
+  eventType   String    // WEDDING | BAPTISM | BIRTHDAY | ANNIVERSARY | CORPORATE
   thumbnail   String
   previewUrl  String?
   
-  // Design configuration
-  colorScheme Json      // { primary, secondary, accent, background, text }
-  layout      Json      // Layout configuration
-  sections    Json      // Available sections and their default content
+  // Design configuration (stored as JSON strings)
+  colorScheme String    // JSON: { primary, secondary, accent, background, text }
+  layout      String    // JSON: Layout configuration
+  sections    String    // JSON: Available sections and their default content
   
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
@@ -113,17 +88,17 @@ model Event {
   templateId      String
   
   // Event details
-  eventType       EventType
+  eventType       String      // WEDDING | BAPTISM | BIRTHDAY | ANNIVERSARY | CORPORATE
   eventTitle      String
   eventDate       DateTime
   eventLocation   String?
   
-  // Customization
-  customContent   Json        // All customized content (text, images, colors, etc.)
+  // Customization (stored as JSON string)
+  customContent   String      // JSON: All customized content (text, images, colors, etc.)
   publicLink      String      @unique  // Unique public URL slug
   
   // Order info
-  orderStatus     OrderStatus @default(PENDING)
+  orderStatus     String      @default("PENDING")  // PENDING | PAID | ACTIVE | EXPIRED
   paymentDate     DateTime?
   expiryDate      DateTime?
   
@@ -147,7 +122,7 @@ model RSVP {
   guestPhone  String?
   
   // Response
-  status      RSVPStatus
+  status      String      // ATTENDING | NOT_ATTENDING | MAYBE
   numberOfGuests Int      @default(1)
   message     String?
   dietaryRestrictions String?
@@ -165,14 +140,14 @@ model SiteSettings {
   logo              String?
   contactEmail      String?
   contactPhone      String?
-  socialLinks       Json?    // { facebook, instagram, twitter, etc }
+  socialLinks       String?  // JSON: { facebook, instagram, twitter, etc }
   
   // Pricing
   packagePrice      Int      @default(999)
   currency          String   @default("MDL")
   
   // Features
-  featuresEnabled   Json?    // Which features are enabled
+  featuresEnabled   String?  // JSON: Which features are enabled
   
   updatedAt         DateTime @updatedAt
 }
