@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, Mail, Lock, Loader2 } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,18 +21,31 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual authentication
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // Simulate login - replace with actual NextAuth signIn
-      if (formData.email === "admin@Weday.md") {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/client/dashboard");
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Email sau parolă incorectă");
+        setIsLoading(false);
+        return;
+      }
+
+      if (result?.ok) {
+        // Fetch session to get user role
+        const response = await fetch("/api/auth/session");
+        const session = await response.json();
+        
+        if (session?.user?.role === "ADMIN") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/client/dashboard");
+        }
       }
     } catch (err) {
-      setError("Email sau parolă incorectă");
-    } finally {
+      setError("A apărut o eroare. Încearcă din nou.");
       setIsLoading(false);
     }
   };
